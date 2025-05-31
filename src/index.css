@@ -1,11 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
 @import "tailwindcss";
 /* Anda bisa menambahkan gaya kustom di sini jika diperlukan */
 /* Gaya kustom Anda bisa ditambahkan di bawah ini */
 /* Font Inter dari Google Fonts */
 /* Font Inter dari Google Fonts */
 /* Font Inter dari Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"); /* Menambahkan bobot 800 */
 
+/* Gaya kustom Anda bisa ditambahkan di bawah ini */
 body {
   font-family: "Inter", sans-serif;
   background-color: #eef2f5; /* Latar belakang abu-abu yang lebih terang */
