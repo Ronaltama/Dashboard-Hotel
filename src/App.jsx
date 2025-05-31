@@ -1,12 +1,70 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import FloorList from "./components/FloorList";
 import RoomGrid from "./components/RoomGrid";
+import LoginPage from "./components/LoginPage"; // Import komponen login
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // NEW: State autentikasi
   const [selectedFloor, setSelectedFloor] = useState("floor1");
   const [hotelData, setHotelData] = useState({});
 
-  const getDailyKwhDataForRoom = (roomId, date, range) => {
+  // NEW: Cek status autentikasi saat aplikasi dimuat
+  useEffect(() => {
+    // Di aplikasi nyata, Anda akan memeriksa token di localStorage
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      // Anda bisa melakukan validasi token di sini jika diperlukan (misal: cek kedaluwarsa)
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Fungsi autentikasi yang akan dipanggil dari LoginPage
+  // *** PENTING: Ini adalah simulasi, di dunia nyata Anda akan panggil API backend ***
+  const handleLogin = async (username, password) => {
+    // Contoh sederhana: username 'admin', password 'password123'
+    if (username === "admin" && password === "password123") {
+      const dummyToken = "your_dummy_jwt_token_here_12345";
+      localStorage.setItem("authToken", dummyToken); // Simpan token
+      setIsAuthenticated(true);
+      return { success: true };
+    } else {
+      return { success: false, message: "Invalid credentials" };
+    }
+
+    // Contoh bagaimana Anda akan memanggil API nyata:
+    /*
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
+      if (response.ok && data.token) {
+        localStorage.setItem('authToken', data.token);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || "Login failed" };
+      }
+    } catch (error) {
+      console.error("Login API error:", error);
+      return { success: false, message: "Network error. Please try again." };
+    }
+    */
+  };
+
+  // NEW: Fungsi untuk logout
+  const handleLogout = () => {
+    localStorage.removeItem("authToken"); // Hapus token
+    setIsAuthenticated(false);
+    setSelectedFloor("floor1"); // Reset ke default
+  };
+
+  const getDailyKwhDataForRoom = useCallback((roomId, date, range) => {
+    // Logika data dummy
     const seed =
       parseInt(roomId) +
       date.getDate() +
@@ -79,9 +137,10 @@ function App() {
       });
     }
     return data;
-  };
+  }, []); // useCallback untuk fungsi ini
 
   useEffect(() => {
+    // Data untuk 1 lantai, 1 kamar
     const fetchedHotelData = {
       floor1: [{ id: "101", room: "101", status: "Occupied" }],
     };
@@ -91,17 +150,21 @@ function App() {
 
   const roomsOnSelectedFloor = hotelData[selectedFloor] || [];
 
+  // Conditional rendering: tampilkan Login Page jika belum autentikasi
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
+        <LoginPage onLogin={handleLogin} />
+      </div>
+    );
+  }
+
+  // Tampilkan Dashboard jika sudah autentikasi
   return (
     <div className="min-h-screen bg-blue-50 flex p-6 md:p-10">
-      {" "}
-      {/* Padding lebih besar */}
       {/* Sidebar Kiri: Daftar Lantai */}
       <div className="w-1/5 md:w-1/6 lg:w-1/5 xl:w-1/6 bg-white rounded-2xl shadow-xl flex flex-col p-6 mr-8 border border-blue-100">
-        {" "}
-        {/* Radius lebih besar, shadow lebih kuat, margin lebih besar */}
         <h1 className="text-xl md:text-2xl font-extrabold text-blue-700 mb-8 text-center">
-          {" "}
-          {/* Font lebih tebal, margin lebih besar */}
           iBright DASHBOARD
         </h1>
         <FloorList
@@ -109,20 +172,27 @@ function App() {
           selectedFloor={selectedFloor}
           onSelectFloor={setSelectedFloor}
         />
+        {/* Tombol Logout di sidebar */}
+        <div className="mt-auto pt-6 border-t border-gray-100 text-center">
+          {" "}
+          {/* mt-auto untuk dorong ke bawah */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105 text-sm"
+          >
+            Logout
+          </button>
+        </div>
       </div>
+
       {/* Konten Utama: Grid Kamar (Hanya akan menampilkan 1 kamar) */}
       <div className="flex-grow bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-blue-100">
-        {" "}
-        {/* Radius lebih besar, shadow lebih kuat, padding lebih besar */}
         <div className="flex items-center justify-between mb-10 pb-5 border-b border-blue-100">
-          {" "}
-          {/* Margin dan padding lebih besar, border lebih halus */}
           <h2 className="text-3xl md:text-4xl font-extrabold text-blue-700">
-            {" "}
-            {/* Font lebih tebal */}
             FLOOR {selectedFloor.replace("floor", "")}
           </h2>
         </div>
+
         {roomsOnSelectedFloor.length > 0 ? (
           <RoomGrid
             rooms={roomsOnSelectedFloor}
